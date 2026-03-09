@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1773001707447-1
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: last_message
+                  type: DATETIME
+            tableName: sessions
+  - changeSet:
+      id: 1773001707447-5
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropTable:
+            cascadeConstraints: true
+            tableName: bots
+  - changeSet:
+      id: 1773001707447-6
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropTable:
+            cascadeConstraints: true
+            tableName: users
+

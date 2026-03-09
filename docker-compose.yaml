@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: jbot_postgres
+    environment:
+      POSTGRES_DB: jbot
+      POSTGRES_USER: jbot_user
+      POSTGRES_PASSWORD: jbot_pass
+    ports:
+      - "15431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U integration_user -d integration_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    build: .
+    container_name: jbot_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/jbot
+      SPRING_DATASOURCE_USERNAME: jbot_user
+      SPRING_DATASOURCE_PASSWORD: jbot_pass
+      API_KEY: your-secret-api-key-change-me
+    ports:
+      - "8080:8080"
+volumes:
+  postgres_data:

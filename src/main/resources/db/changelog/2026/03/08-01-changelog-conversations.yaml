@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1773008075100-1
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_conversations
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: timestamp
+                  type: DATETIME
+              - column:
+                  name: session_id
+                  type: VARCHAR(255)
+              - column:
+                  name: message_request
+                  type: VARCHAR(255)
+              - column:
+                  name: message_response
+                  type: VARCHAR(255)
+              - column:
+                  name: topic
+                  type: VARCHAR(255)
+            tableName: conversations
+  - changeSet:
+      id: 1773008075100-5
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropTable:
+            cascadeConstraints: true
+            tableName: bots
+  - changeSet:
+      id: 1773008075100-6
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropTable:
+            cascadeConstraints: true
+            tableName: users
+

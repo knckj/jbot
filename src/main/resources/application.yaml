@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: jbot
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:15431/jbot}
+    username: ${SPRING_DATASOURCE_USERNAME:jbot_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:jbot_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    sql:
+      init:
+        mode: always
+        platform: postgresql
+
+management:
+  endpoint:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+server:
+  port: 8080

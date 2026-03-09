@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1772922387554-1
+      author: jakubkaniecki
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_sessions
+                  name: uuid
+                  type: VARCHAR(255)
+              - column:
+                  name: bot_name
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+            tableName: sessions
+
