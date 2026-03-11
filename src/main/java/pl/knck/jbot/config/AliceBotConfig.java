@@ -1,5 +1,6 @@
 package pl.knck.jbot.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
 import org.alicebot.ab.Bot;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import java.util.function.Function;
 import org.alicebot.ab.MagicBooleans;
 
+@Slf4j
 @Configuration
 public class AliceBotConfig {
 
@@ -32,6 +34,7 @@ public class AliceBotConfig {
     @Bean
     public Map<String, Bot> bots(String resourcesPath) throws IOException {
         Path botsDir = Paths.get(resourcesPath, "bots");
+        log.info("Loading bot directory {}", botsDir);
         try (Stream<Path> stream = Files.list(botsDir)) {
             return stream.filter(Files::isDirectory)
                     .map(Path::getFileName)
@@ -40,7 +43,7 @@ public class AliceBotConfig {
                     .collect(Collectors.toMap(
                             Function.identity(),
                             botName -> new Bot(botName, resourcesPath),
-                            (map1, map2) -> map1,
+                            (map1, _) -> map1,
                             LinkedHashMap::new
                     ));
         }

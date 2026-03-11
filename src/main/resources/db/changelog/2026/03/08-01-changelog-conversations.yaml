@@ -46,4 +46,16 @@ databaseChangeLog:
         - dropTable:
             cascadeConstraints: true
             tableName: users
+  - changeSet:
+      id: 20260310-01-alter-conversations-text
+      author: jakubkaniecki
+      changes:
+        - modifyDataType:
+            tableName: conversations
+            columnName: message_request
+            newDataType: TEXT
+        - modifyDataType:
+            tableName: conversations
+            columnName: message_response
+            newDataType: TEXT
 

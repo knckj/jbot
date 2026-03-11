@@ -1,5 +1,7 @@
 package pl.knck.jbot.controller;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,14 +25,15 @@ public class BotController {
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest chatRequest) {
-        log.info("Received chat request: {}", chatRequest);
+        log.info("Received chat request to bot: {}", chatRequest.getBotName());
         return ResponseEntity.ok(
-                botService.getChatResponse(
-                chatRequest.getMessage(),
-                chatRequest.getBotName(),
-                String.valueOf(chatRequest.getSessionId()),
-                chatRequest.getUsername()
+                botService.chat(
+                        chatRequest.getMessage(),
+                        chatRequest.getSessionId(),
+                        chatRequest.getBotName(),
+                        chatRequest.getUsername()
                 )
+
         );
     }
 }
