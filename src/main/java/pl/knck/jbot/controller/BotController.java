@@ -2,6 +2,7 @@ package pl.knck.jbot.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +14,10 @@ import pl.knck.jbot.service.BotService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class BotController {
 
-    @Autowired
-    public BotService botService;
+    private final BotService botService;
 
     @GetMapping("/reload/{botName}")
     public ResponseEntity<String> loadBots(@PathVariable String botName) {

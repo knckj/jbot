@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.alicebot.ab.Bot;
 import org.alicebot.ab.Chat;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import pl.knck.jbot.config.AliceBotConfig;
 import pl.knck.jbot.dto.ChatRequest;
@@ -81,8 +82,7 @@ public class BotService {
         });
         log.info("Closed session: {}", sessionId);
     }
-    public String setBotActive(String botName) {
-        return "Bot " + botName + " is now active.";
-    }
+
+
 }
 
