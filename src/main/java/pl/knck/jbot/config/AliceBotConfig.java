@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.function.Function;
 import org.alicebot.ab.MagicBooleans;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Slf4j
 @Configuration
+@EnableScheduling
 public class AliceBotConfig {
 
     @Bean

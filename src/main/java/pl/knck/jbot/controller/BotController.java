@@ -1,15 +1,15 @@
 package pl.knck.jbot.controller;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.knck.jbot.dto.ActiveSessionDTO;
 import pl.knck.jbot.dto.ChatRequest;
 import pl.knck.jbot.dto.ChatResponse;
 import pl.knck.jbot.service.BotService;
+
+import java.util.ArrayList;
 
 @Slf4j
 @RestController
@@ -36,5 +36,10 @@ public class BotController {
                 )
 
         );
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<ArrayList<ActiveSessionDTO>> getActiveSessions() {
+        return ResponseEntity.ok(botService.getActiveSessions());
     }
 }

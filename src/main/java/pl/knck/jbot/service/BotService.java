@@ -1,16 +1,14 @@
 package pl.knck.jbot.service;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.alicebot.ab.Bot;
 import org.alicebot.ab.Chat;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.knck.jbot.config.AliceBotConfig;
-import pl.knck.jbot.dto.ChatRequest;
+import pl.knck.jbot.dto.ActiveSessionDTO;
 import pl.knck.jbot.dto.ChatResponse;
 import pl.knck.jbot.model.Conversation;
 import pl.knck.jbot.model.Session;
@@ -18,8 +16,11 @@ import pl.knck.jbot.repository.ConversationRepository;
 import pl.knck.jbot.repository.SessionRepository;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,6 +32,10 @@ public class BotService {
     private final ConversationRepository conversationRepository;
     private final Map<String, Bot> bots = new ConcurrentHashMap<>();
     private final Map<String, Chat> chatSessions = new ConcurrentHashMap<>();
+    private final Map<String, Instant> sessionLastActive = new ConcurrentHashMap<>();
+
+    @Value("${jbot.session.timeout:300000}")
+    private long sessionTimeoutMS;
 
     private Bot getOrLoadBot(String botName) {
         return bots.computeIfAbsent(botName, name -> {
@@ -64,6 +69,9 @@ public class BotService {
         String activeMessage = (message.isBlank()) ? message : "Hello";
         Chat chat = chatSessions.get(activeSessionId);
         String response = chat.multisentenceRespond(message);
+
+        sessionLastActive.put(activeSessionId, Instant.now());
+
         Conversation conversation = new Conversation();
         conversation.setMessageRequest(activeMessage);
         conversation.setMessageResponse(response);
@@ -73,9 +81,9 @@ public class BotService {
         return new ChatResponse(response, botName, activeSessionId, username);
     }
 
-
     public void closeSession(String sessionId) {
         chatSessions.remove(sessionId);
+        sessionLastActive.remove(sessionId);
         sessionRepository.findById(sessionId).ifPresent(session -> {
             session.setStatus("CLOSED");
             sessionRepository.save(session);
@@ -83,6 +91,28 @@ public class BotService {
         log.info("Closed session: {}", sessionId);
     }
 
+    @Scheduled(fixedDelayString = "${jbot.session.cleanup.interval:60000}")
+    public void cleanupStaleSessions() {
+        Instant cutoff = Instant
+                .now().minusMillis(sessionTimeoutMS);
+        sessionLastActive.entrySet().stream()
+                .filter(entry -> entry.getValue().isBefore(cutoff))
+                .map(Map.Entry::getKey)
+                .forEach(sessionId -> {
+                    log.info("Cleaning up stale session: {}", sessionId);
+                    closeSession(sessionId);
+                });
+    }
+
+    public ArrayList<ActiveSessionDTO> getActiveSessions() {
+        return new ArrayList<ActiveSessionDTO>(chatSessions
+                .entrySet()
+                .stream()
+                .map(entry ->
+                        new ActiveSessionDTO(entry.getKey(), chatSessions.get(entry.getKey()).bot.name)
+                ).collect(Collectors.toCollection(ArrayList::new)));
+
+    }
 
 }
 

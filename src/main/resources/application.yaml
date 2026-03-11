@@ -32,5 +32,10 @@ management:
       export:
         enabled: true
 
+jbot:
+  session:
+    timeout: 30000
+    cleanup-interval: 60000 
+
 server:
   port: 8080
