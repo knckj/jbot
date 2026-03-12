@@ -11,7 +11,6 @@ import pl.knck.jbot.exceptions.BotNotFoundException;
 import pl.knck.jbot.service.BotService;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @RestController

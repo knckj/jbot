@@ -145,12 +145,11 @@ public class BotService {
     }
 
     public ArrayList<ActiveSessionDTO> getActiveSessions() {
-        return new ArrayList<ActiveSessionDTO>(chatSessions
-                .entrySet()
+        return chatSessions
+                .keySet()
                 .stream()
-                .map(entry ->
-                        new ActiveSessionDTO(entry.getKey(), chatSessions.get(entry.getKey()).bot.name)
-                ).collect(Collectors.toCollection(ArrayList::new)));
+                .map(s -> new ActiveSessionDTO(s, chatSessions.get(s).bot.name)
+                ).collect(Collectors.toCollection(ArrayList::new));
 
     }
 
