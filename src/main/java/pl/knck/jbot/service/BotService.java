@@ -65,9 +65,7 @@ public class BotService {
         }
     }
 
-
     private String createNewSession(String botName, String username) {
-        log.info("Creating new session for bot: {}", botName);
         Session session = new Session();
         session.setBotName(botName);
         session.setUsername(username);
@@ -80,7 +78,7 @@ public class BotService {
     }
 
     private String activeSession(ChatRequest chatRequest) {
-        return (chatRequest.getSessionId() != null
+        return (chatRequest.getSessionId().isBlank()
                         && chatSessions.containsKey(
                         chatRequest.getSessionId()))
                 ? chatRequest.getSessionId()
@@ -98,15 +96,14 @@ public class BotService {
                 );
     }
 
-    private void addConverationEntry(ChatRequest chatRequest, String response, String topic) {
+    private void addConversationEntry(String sessionId, String message, String response, String topic) {
         Conversation conversation = Conversation.builder()
-                .sessionId(chatRequest.getSessionId())
-                .messageRequest(chatRequest.getMessage())
+                .sessionId(sessionId)
+                .messageRequest(message)
                 .messageResponse(response)
                 .topic(topic)
                 .build();
-        Long conversationId = conversationRepository.save(conversation).getId();
-        log.info("Added conversation: {}", conversationId);
+        conversationRepository.save(conversation);
     }
 
     public ChatResponse chat(ChatRequest chatRequest) {
@@ -115,7 +112,7 @@ public class BotService {
         Chat chat = chatSessions.get(activeSessionId);
         String response = chat.multisentenceRespond(activeMessage);
         String topic = chat.predicates.get("topic");
-        addConverationEntry(chatRequest, response, topic);
+        addConversationEntry(activeSessionId, activeMessage, response, topic);
         sessionLastActive.put(activeSessionId, Instant.now());
 
         return ChatResponse.builder()
@@ -144,10 +141,7 @@ public class BotService {
         sessionLastActive.entrySet().stream()
                 .filter(entry -> entry.getValue().isBefore(cutoff))
                 .map(Map.Entry::getKey)
-                .forEach(sessionId -> {
-                    log.info("Cleaning up stale session: {}", sessionId);
-                    closeSession(sessionId);
-                });
+                .forEach(this::closeSession);
     }
 
     public ArrayList<ActiveSessionDTO> getActiveSessions() {

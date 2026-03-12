@@ -24,7 +24,6 @@ public class BotController {
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest chatRequest) {
     try {
-        log.info("Received chat request to bot: {}", chatRequest.getBotName());
         return ResponseEntity.ok(
                 botService.chat(
                         ChatRequest.builder()
