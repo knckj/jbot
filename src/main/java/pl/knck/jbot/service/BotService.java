@@ -9,7 +9,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.knck.jbot.config.AliceBotConfig;
 import pl.knck.jbot.dto.ActiveSessionDTO;
+import pl.knck.jbot.dto.ChatRequest;
 import pl.knck.jbot.dto.ChatResponse;
+import pl.knck.jbot.exceptions.BotNotFoundException;
 import pl.knck.jbot.model.Conversation;
 import pl.knck.jbot.model.Session;
 import pl.knck.jbot.repository.ConversationRepository;
@@ -41,13 +43,28 @@ public class BotService {
         return bots.computeIfAbsent(botName, name -> {
             try {
                 log.info("Loading bot {}", name);
-                return aliceBotConfig.bots(aliceBotConfig.resourcesPath()).get(name);
+                if (doesBotExist(name)) {
+                    return aliceBotConfig
+                            .bots(aliceBotConfig
+                                    .resourcesPath())
+                            .get(name);
+                } else  {
+                    throw new BotNotFoundException("Bot " + name + " not found");
+                }
             } catch (IOException e) {
-                log.error("Error loading bot {}", name, e);
-                throw new RuntimeException("Error loading bot: " + name, e);
-            }
-        });
+                    throw new BotNotFoundException("Bot " + name + " not found");}
+                }
+            );
     }
+
+    private Boolean doesBotExist(String botName) {
+        try {
+            return aliceBotConfig.bots(aliceBotConfig.resourcesPath()).containsKey(botName);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 
     private String createNewSession(String botName, String username) {
         log.info("Creating new session for bot: {}", botName);
@@ -62,23 +79,51 @@ public class BotService {
         return sessionId;
     }
 
-    public ChatResponse chat(String message, String sessionId, String botName, String username) {
-        String activeSessionId = (sessionId != null && chatSessions.containsKey(sessionId))
-                ? sessionId
-                : createNewSession(botName, username);
-        String activeMessage = (message.isBlank()) ? message : "Hello";
-        Chat chat = chatSessions.get(activeSessionId);
-        String response = chat.multisentenceRespond(message);
+    private String activeSession(ChatRequest chatRequest) {
+        return (chatRequest.getSessionId() != null
+                        && chatSessions.containsKey(
+                        chatRequest.getSessionId()))
+                ? chatRequest.getSessionId()
+                : createNewSession(
+                chatRequest.getBotName(),
+                chatRequest.getUsername()
+        );
+    }
 
+    private String getActiveMessage(ChatRequest chatRequest) {
+        return (
+                chatRequest.getMessage().isBlank()
+                ? "Hello"
+                : chatRequest.getMessage()
+                );
+    }
+
+    private void addConverationEntry(ChatRequest chatRequest, String response, String topic) {
+        Conversation conversation = Conversation.builder()
+                .sessionId(chatRequest.getSessionId())
+                .messageRequest(chatRequest.getMessage())
+                .messageResponse(response)
+                .topic(topic)
+                .build();
+        Long conversationId = conversationRepository.save(conversation).getId();
+        log.info("Added conversation: {}", conversationId);
+    }
+
+    public ChatResponse chat(ChatRequest chatRequest) {
+        String activeSessionId = activeSession(chatRequest);
+        String activeMessage = getActiveMessage(chatRequest);
+        Chat chat = chatSessions.get(activeSessionId);
+        String response = chat.multisentenceRespond(activeMessage);
+        String topic = chat.predicates.get("topic");
+        addConverationEntry(chatRequest, response, topic);
         sessionLastActive.put(activeSessionId, Instant.now());
 
-        Conversation conversation = new Conversation();
-        conversation.setMessageRequest(activeMessage);
-        conversation.setMessageResponse(response);
-        conversation.setSessionId(activeSessionId);
-        conversation.setTopic(chat.predicates.get("topic"));
-        conversationRepository.save(conversation);
-        return new ChatResponse(response, botName, activeSessionId, username);
+        return ChatResponse.builder()
+                .response(response)
+                .username(chatRequest.getUsername())
+                .botName(chatRequest.getBotName())
+                .sessionId(activeSessionId)
+                .build();
     }
 
     public void closeSession(String sessionId) {
@@ -93,6 +138,7 @@ public class BotService {
 
     @Scheduled(fixedDelayString = "${jbot.session.cleanup.interval:60000}")
     public void cleanupStaleSessions() {
+        log.info("Cleaning up stale sessions");
         Instant cutoff = Instant
                 .now().minusMillis(sessionTimeoutMS);
         sessionLastActive.entrySet().stream()
