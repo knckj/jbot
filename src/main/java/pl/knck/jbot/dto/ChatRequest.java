@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import lombok.*;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRequest {
