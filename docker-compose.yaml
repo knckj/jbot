@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U integration_user -d integration_db"]
+      test: ["CMD-SHELL", "pg_isready -U jbot_user -d jbot"]
       interval: 10s
       timeout: 5s
       retries: 5
