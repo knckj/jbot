@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import pl.knck.jbot.dto.ActiveSessionDTO;
 import pl.knck.jbot.dto.ChatRequest;
 import pl.knck.jbot.dto.ChatResponse;
+import pl.knck.jbot.exceptions.BotNotFoundException;
 import pl.knck.jbot.service.BotService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -19,23 +21,26 @@ public class BotController {
 
     private final BotService botService;
 
-    @GetMapping("/reload/{botName}")
-    public ResponseEntity<String> loadBots(@PathVariable String botName) {
-        return ResponseEntity.ok("Bot " + botName + " reloaded successfully.");
-    }
-
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest chatRequest) {
+    try {
         log.info("Received chat request to bot: {}", chatRequest.getBotName());
         return ResponseEntity.ok(
                 botService.chat(
-                        chatRequest.getMessage(),
-                        chatRequest.getSessionId(),
-                        chatRequest.getBotName(),
-                        chatRequest.getUsername()
+                        ChatRequest.builder()
+                                .message(chatRequest.getMessage())
+                                .botName(chatRequest.getBotName())
+                                .username(chatRequest.getUsername())
+                                .sessionId(chatRequest.getSessionId())
+                                .build()
                 )
 
         );
+    } catch (BotNotFoundException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
     @GetMapping("/sessions")
